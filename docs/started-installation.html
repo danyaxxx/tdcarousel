@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link href="./reset.css" content="text/css" rel="stylesheet">
+    <link rel="stylesheet" href="./vendors/highlightjs/styles/default.css">
+    <link href="./style.css" content="text/css" rel="stylesheet">
+    <title>Installation | TDCarousel | v1.0</title>
+</head>
+<body>
+<section class="title">
+    <div class="container">
+        <h1>Getting Started</h1>
+    </div>
+</section>
+<div class="docs">
+    <div class="container clearfix">
+        <div class="navigation">
+            <ul class="side-nav">
+                <li class="side-nav-head">Getting Started</li>
+<!--                 <li><a href="./index.html">Welcome</a></li> -->
+                <li class="active"><a href="./started-installation.html">Installation</a></li>
+            </ul>
+            <ul class="side-nav">
+                <li class="side-nav-head">API</li>
+                <li><a href="./api-options.html">Options</a></li>
+            </ul>
+        </div>
+        <div class="docs-content">
+            <h2>Installation</h2>
+            <hr>
+            <h3>Include CSS</h3>
+            <p>First, include CSS file into your HTML head:</p>
+            <pre><code class="html">&lt;link href=&quot;./reset.css&quot; content=&quot;text/css&quot; rel=&quot;stylesheet&quot;&gt;</code></pre>
+            <p>tdcarousel.css file is required and should be included before any *.js files.</p>
+            <h3>Include JS</h3>
+            <p>Include tdcarousel.js into the footer.</p>
+            <pre><code>&lt;script src=&quot;./tdcarousel/tdcarousel.js&quot;&gt;</script></code></pre>
+            <h3>Set HTML</h3>
+            <p>You don't need any special markup.All you need is to wrap your divs (tdcarousel works with any type element a/img/span..) inside the container element &lt;div class=&quot;td-carousel-wrap&quot;&gt;. Class "td-carousel-wrap" is mandatory to apply proper styles that come from tdcarousel.css file.</p>
+            <pre><code>&lt;!-- Set up your HTML --&gt;
+&lt;div id=&quot;test&quot; class=&quot;td-carousel-wrap&quot;&gt;
+    &lt;div class=&quot;td-carousel&quot;&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+        &lt;div&gt;Your Content&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<h3>The use of the plugin</h3>
+            <pre><code>TDC('#test');</code></pre>
+        </div>
+    </div>
+</div>
+<script src="./vendors/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
+
