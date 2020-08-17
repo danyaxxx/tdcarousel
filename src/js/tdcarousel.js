@@ -38,7 +38,10 @@ class TDCarousel {
         this._current = 0;
 
         this.navigation = {};
-        this._dots = [];
+        this._dots = {
+            items: [],
+            positions: []
+        };
 
         this.selector = document.querySelector(selector);
         let  __tmpElement = this.selector.querySelector('.td-carousel');
@@ -176,29 +179,36 @@ class TDCarousel {
         for (let i = 0; i < count; i++) {
             let dot = document.createElement('button');
             dot.classList.add('td-carousel-dot');
-            this._dots.push(dot);
+            this._dots.items.push(dot);
             dots.append(dot);
         }
 
-        this._dots[0].classList.add('active');
+        this._dots.items[0].classList.add('active');
+        this.positionsDots();
 
         dots.addEventListener('click', (e) => {
             if (e.target.classList.contains('td-carousel-dot')) {
                 let to = 0;
-                for (var i = 0; i < this._dots.length; i++) {
-                    this._dots[i].classList.remove("active");
-                    if (e.target === this._dots[i]) {
-                        this._dots[i].classList.add("active");
-                        to = i * this.settings.items;
-                        let maxpos = this._items.length - this.settings.items;
-                        if (to > maxpos) {
-                            to = maxpos;
-                        }
+                // for (var i = 0; i < this._dots.items.length; i++) {
+                //     this._dots.items[i].classList.remove("active");
+                //     if (e.target === this._dots.items[i]) {
+                //         this._dots.items[i].classList.add("active");
+                //         to = i * this.settings.items;
+                //         let maxpos = this._items.length - this.settings.items;
+                //         if (to > maxpos) {
+                //             to = maxpos;
+                //         }
+                //     }
+                // }
+                for (let i = 0; i < this._dots.items.length; i++) {
+                    if (e.target === this._dots.items[i]) {
+                        to = this._dots.positions[i];
                     }
                 }
                 this._stage.style.transition = 'all ' + (this.duration(this._current, to) / 1000) + 's ease 0s';
                 this._stage.style.transform = 'translate3d(-' + (this._width * to) + 'px, 0px , 0px)';
                 this._current = to;
+                this.currentDots();
 
                 if (this.settings.loop === false) {
                     this.navToggler();
@@ -212,6 +222,35 @@ class TDCarousel {
         this.responsiveDots();
 
         return dots;
+    }
+
+    positionsDots() {
+        let maxpos = this._items.length - this.settings.items;
+        let count = Math.ceil(this._items.length / this.settings.items);
+
+        this._dots.positions = [];
+        for (let i = 0; i < count; i++) {
+            let pos = i * this.settings.items;
+            if (pos > maxpos) {
+                pos = maxpos
+            }
+            this._dots.positions.push(pos);
+        }
+    }
+
+    currentDots() {
+        let curr = 0;
+        for (var i = 0; i < this._dots.positions.length; i++) {
+            if (this._current === this._dots.positions[i]) {
+                curr = i;
+            }
+        }
+        if (this._current === this._dots.positions[curr]) {
+            for (var i = 0; i < this._dots.items.length; i++) {
+                this._dots.items[i].classList.remove("active");
+            }
+            this._dots.items[curr].classList.add("active");
+        }
     }
 
     navToggler() {
@@ -249,18 +288,19 @@ class TDCarousel {
             let count = Math.ceil(this._items.length / this.settings.items);
 
             if (count > 1) {
+                this.currentDots();
                 this.navigation.dots.classList.remove('disabled');
-                if (this._dots.length === count) {
+                if (this._dots.items.length === count) {
                     return;
-                } else if (this._dots.length > count) {
-                    while (this._dots.length > count) {
-                        this._dots.pop();
+                } else if (this._dots.items.length > count) {
+                    while (this._dots.items.length > count) {
+                        this._dots.items.pop();
                         this.navigation.dots.childNodes[this.navigation.dots.childNodes.length - 1].remove();
                     }
-                } else if (this._dots.length < count) {
+                } else if (this._dots.items.length < count) {
                     let dot = document.createElement('button');
                     dot.classList.add('td-carousel-dot');
-                    this._dots.push(dot);
+                    this._dots.items.push(dot);
                     this.navigation.dots.append(dot);
                 }
             } else {
@@ -284,6 +324,7 @@ class TDCarousel {
             }
         }
         this._stage.style.transform = 'translate3d(-' + (this._width * this._current) + 'px, 0px , 0px)';
+        this.currentDots();
     }
 
     next(speed = 0, step = 1) {
@@ -299,6 +340,7 @@ class TDCarousel {
             }
         }
         this._stage.style.transform = 'translate3d(-' + (this._width * this._current) + 'px, 0px , 0px)';
+        this.currentDots();
     }
 
     responsive() {
