@@ -60,15 +60,19 @@
 let g = TDC('#cl-1', {
     items: 4,
     nav: true,
-    loop: true,
+    loop: false,
     rewind: false,
     dots: true,
+    autoplayTimeout: 2500,
+    autoplayHoverPause: true,
+    autoplay: true,
     responsive:{
             0:{
                 items:1
             },
             600:{
-                items:8
+                items:6,
+                autoplay: false,
             },
             1000:{
                 items:4

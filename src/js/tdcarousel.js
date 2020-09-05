@@ -11,6 +11,9 @@ class TDCarousel {
             responsive = {},
             smartSpeed = 250,
             dotsSpeed = false,
+            autoplay = false,
+            autoplayTimeout = 5000,
+            autoplayHoverPause = false,
         } = option;
 
         this.options = {
@@ -22,6 +25,9 @@ class TDCarousel {
             responsive: responsive,
             smartSpeed: smartSpeed,
             dotsSpeed: dotsSpeed,
+            autoplay: autoplay,
+            autoplayTimeout: autoplayTimeout,
+            autoplayHoverPause: autoplayHoverPause,
         };
 
         this.settings = {
@@ -32,6 +38,9 @@ class TDCarousel {
             rewind: this.options.rewind,
             smartSpeed: this.options.smartSpeed,
             dotsSpeed: this.options.dotsSpeed,
+            autoplay: this.options.autoplay,
+            autoplayTimeout: this.options.autoplayTimeout,
+            autoplayHoverPause: this.options.autoplayHoverPause,
         };
 
         this._items = [];
@@ -44,6 +53,15 @@ class TDCarousel {
             items: [],
             positions: []
         };
+
+
+        // Autoplay Config
+        this._autoplayPaused = true;
+        this._autoplayTimeout = 0;
+        this._autoplayTime = 0;
+        this._autoplayCall = null;
+        this._autoplayState = false;
+
 
         this.selector = document.querySelector(selector);
         let  __tmpElement = this.selector.querySelector('.td-carousel');
@@ -100,7 +118,7 @@ class TDCarousel {
     checkingConfig() {
         let settings = this.settings;
         if (settings.rewind === true && settings.loop === true) {
-            console.warn('The "rewind" parameter is a priority, so for loop to work, you must set the "rewind" parameter to "false"');
+            console.warn('The "loop" parameter is a priority, so for "rewind" to work, you must set the "loop" parameter to "false"');
         }
     }
 
@@ -206,6 +224,10 @@ class TDCarousel {
             carouselStage.style.transition = 'all 0s ease 0s';
             this._stage.style.transform = `translate3d(-${this._width * this._current}px, 0px , 0px)`;
         });
+
+        if (this.settings.autoplay === true) {
+            this.autoplay();
+        }
     }
 
     createNav() {
@@ -348,10 +370,6 @@ class TDCarousel {
         let maxpos = this.maximum();
         let count = Math.ceil(this._items.length / this.settings.items);
 
-        if (this.settings.rewind === true) {
-            maxpos -= this.settings.items - 1;
-        }
-
         this._dots.positions = [];
         for (let i = 0; i < count; i++) {
             let pos = i * this.settings.items + this.minimum();
@@ -416,16 +434,7 @@ class TDCarousel {
         let minimum = this.minimum();
         let maximum = this.maximum();
 
-        if (this.settings.rewind === true) {
-            if (pos < minimum) {
-                pos = maximum - this.settings.items + 1;
-            } else if (pos > maximum - this.settings.items + 1) {
-                pos = minimum;
-            } else {
-                pos = pos;
-            }
-            position = pos;
-        } else if (this.settings.loop === true) {
+        if (this.settings.loop === true) {
             if (Math.abs(distance) > items / 2) {
                 distance += direction * -1 * items;
             }
@@ -437,6 +446,15 @@ class TDCarousel {
                 current = revert - distance;
                 position = revert;
             }
+        } else if (this.settings.rewind === true || this.settings.autoplay === true) {
+            if (pos < minimum) {
+                pos = maximum;
+            } else if (pos > maximum) {
+                pos = minimum;
+            } else {
+                pos = pos;
+            }
+            position = pos;
         } else {
             if (pos < 0) { pos = 0; }
             if (pos > maximum) { pos = maximum; }
@@ -475,6 +493,73 @@ class TDCarousel {
         }
     }
 
+    read() {
+        return new Date().getTime() - this._autoplayTime;
+    }
+
+    autoplay() {
+        this._autoplayState = true;
+        this.autoplayPlay();
+        this.selector.addEventListener('mouseleave', (e) => {
+            if (this.settings.autoplay === true) {
+                this.autoplayPlay();
+            }
+        });
+        this.selector.addEventListener('mouseover', (e) => {
+            if (this.settings.autoplayHoverPause === true && this.settings.autoplay === true) {
+                this.autoplayPause();
+            }
+        });
+    }
+
+    autoplayNext() {
+        this._autoplayCall = window.setTimeout(
+            this.autoplayNext.bind(this),
+            this._autoplayTimeout * (Math.round(this.read() / this._autoplayTimeout) + 1) - this.read()
+        );
+        this.next();
+    }
+
+    autoplayPlay(timeout=(this.settings.autoplayTimeout)) {
+        let elapsed = Math.min(this._autoplayTime % (this._autoplayTimeout || timeout), timeout);
+
+        if (this._autoplayPaused === true) {
+            this._autoplayTime = this.read();
+            this._autoplayPaused = false;
+        } else {
+            window.clearTimeout(this._autoplayCall);
+        }
+
+        this._autoplayTime += this.read() % timeout - elapsed;
+        this._autoplayTimeout = timeout;
+        this._autoplayCall = window.setTimeout(this.autoplayNext.bind(this), timeout - elapsed);
+    }
+
+    autoplayPause() {
+        if (this._autoplayPaused === false) {
+            this._autoplayTime = this.read();
+            this._autoplayPaused = true;
+            window.clearTimeout(this._autoplayCall);
+        }
+    }
+
+    autoplayStop() {
+        this._autoplayTime = 0;
+        this._autoplayPaused = true;
+
+        window.clearTimeout(this._autoplayCall);
+    }
+
+    responsiveAutoplay() {
+        if (this.settings.autoplay === false) {
+            this.autoplayStop();
+        } else if (this.settings.autoplay === true && this._autoplayState === true) {
+            this.autoplayPlay();
+        } else {
+            this.autoplay();
+        }
+    }
+
     responsive() {
         let breakpoint = this._breakpoint;
         this._tmpItemsCount = this.settings.items;
@@ -488,6 +573,7 @@ class TDCarousel {
         if (this._breakpoint !== -1 && this._breakpoint !== breakpoint) {
             this.responsiveNav();
             this.responsiveDots();
+            this.responsiveAutoplay();
         }
     }
 }
