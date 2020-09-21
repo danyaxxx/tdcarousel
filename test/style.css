@@ -1,0 +1,13 @@
+.td-carousel-wrap { position: relative; }
+.td-next {
+    height: 30px;
+    width: 30px;
+    background-color: yellow;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 10;
+    text-align: center;
+    line-height: 30px;
+    top: 60px;
+    right: 0;
+}

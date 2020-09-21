@@ -14,6 +14,8 @@ class TDCarousel {
             autoplay = false,
             autoplayTimeout = 5000,
             autoplayHoverPause = false,
+            elementNext = false,
+            elementPrev = false,
         } = option;
 
         this.options = {
@@ -28,6 +30,8 @@ class TDCarousel {
             autoplay: autoplay,
             autoplayTimeout: autoplayTimeout,
             autoplayHoverPause: autoplayHoverPause,
+            elementNext: elementNext,
+            elementPrev: elementPrev,
         };
 
         this.settings = {
@@ -48,7 +52,10 @@ class TDCarousel {
         this._breakpoint = null;
         this._width = null;
         this._current = 0;
-        this.navigation = {};
+        this.navigation = {
+            previous: document.createElement('button'),
+            next: document.createElement('button'),
+        };
         this._dots = {
             items: [],
             positions: []
@@ -197,6 +204,7 @@ class TDCarousel {
         this._stage = carouselStage;
         carouselOuter.append(carouselStage);
         carousel.append(carouselOuter);
+        this.carousel = carousel;
 
         for (var i = 0; i < this.cloneCarousel.children.length; i++) {
             let g = this.cloneCarousel.children[i].cloneNode(true);
@@ -216,7 +224,7 @@ class TDCarousel {
         carouselStage.style.transition = 'all 0s ease 0s';
         carouselStage.style.transform = `translate3d(-${this._width * this._current}px, 0px , 0px)`;
 
-        carousel.append(this.createNav());
+        this.createNav();
         carousel.append(this.createDots());
 
         this.selector.append(carousel);
@@ -231,31 +239,49 @@ class TDCarousel {
     }
 
     createNav() {
+        let navPrev;
+        let navNext;
         let nav = document.createElement('div');
-        let navPrev = document.createElement('button');
-        let navNext = document.createElement('button');
 
-        nav.classList.add('td-carousel-nav');
-        nav.classList.add('disabled');
-        navPrev.classList.add('td-carousel-prev');
-        navNext.classList.add('td-carousel-next');
+        if (this.options.elementNext || this.options.elementPrev) {
+            if (this.options.elementPrev) {
+                let prev = document.querySelector(this.options.elementPrev);
+                if (prev) {
+                    navPrev = prev;
+                    navPrev.addEventListener('click', (e) => { this.prev(this.smartSpeed) });
+                    this.navigation.previous = navPrev;
+                }
+            }
+            if (this.options.elementNext) {
+                let next = document.querySelector(this.options.elementNext);
+                if (next) {
+                    navNext = next;
+                    navNext.addEventListener('click', (e) => { this.next(this.smartSpeed) });
+                    this.navigation.next = navNext;
+                }
+            }
+        } else {
+            navPrev = this.navigation.previous
+            navNext = this.navigation.next
 
-        navPrev.innerText = '<';
-        navNext.innerText = '>';
+            navPrev.classList.add('td-carousel-prev');
+            navNext.classList.add('td-carousel-next');
 
-        navPrev.addEventListener('click', (e) => { this.prev(this.smartSpeed) });
-        navNext.addEventListener('click', (e) => { this.next(this.smartSpeed) });
+            navPrev.innerText = '<';
+            navNext.innerText = '>';
 
-        nav.append(navPrev);
-        this.navigation.previous = navPrev;
-        nav.append(navNext);
-        this.navigation.next = navNext;
+            navPrev.addEventListener('click', (e) => { this.prev(this.smartSpeed) });
+            navNext.addEventListener('click', (e) => { this.next(this.smartSpeed) });
+
+            nav.append(navPrev);
+            nav.append(navNext);
+            this.carousel.append(nav);
+        }
 
         this.navigation.nav = nav;
-
+        nav.classList.add('td-carousel-nav');
+        nav.classList.add('disabled');
         this.responsiveNav();
-
-        return nav;
     }
 
     responsiveNav() {
@@ -424,7 +450,7 @@ class TDCarousel {
         return Math.min(Math.max(Math.abs(to - from), 1), 6) * Math.abs((factor || this.settings.smartSpeed));
     }
 
-    to(pos, speed) {
+    to(pos, speed, autoplay=false) {
         let position = this.relative(pos);
         let current = this.current();
         let revert = null;
@@ -446,7 +472,7 @@ class TDCarousel {
                 current = revert - distance;
                 position = revert;
             }
-        } else if (this.settings.rewind === true || this.settings.autoplay === true) {
+        } else if (this.settings.rewind === true || autoplay === true) {
             if (pos < minimum) {
                 pos = maximum;
             } else if (pos > maximum) {
@@ -517,7 +543,8 @@ class TDCarousel {
             this.autoplayNext.bind(this),
             this._autoplayTimeout * (Math.round(this.read() / this._autoplayTimeout) + 1) - this.read()
         );
-        this.next();
+        // this.next();
+        this.to(this._current + 1, false, true);
     }
 
     autoplayPlay(timeout=(this.settings.autoplayTimeout)) {
