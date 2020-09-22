@@ -16,6 +16,7 @@ class TDCarousel {
             autoplayHoverPause = false,
             elementNext = false,
             elementPrev = false,
+            center = false,
         } = option;
 
         this.options = {
@@ -32,6 +33,7 @@ class TDCarousel {
             autoplayHoverPause: autoplayHoverPause,
             elementNext: elementNext,
             elementPrev: elementPrev,
+            center: center,
         };
 
         this.settings = {
@@ -45,6 +47,7 @@ class TDCarousel {
             autoplay: this.options.autoplay,
             autoplayTimeout: this.options.autoplayTimeout,
             autoplayHoverPause: this.options.autoplayHoverPause,
+            center: this.options.center,
         };
 
         this._items = [];
@@ -115,6 +118,7 @@ class TDCarousel {
 
         this._breakpoint = match;
         this._width = this.selector.clientWidth /  this.settings.items;
+        this.checkingConfig();
     }
 
     init() {
@@ -126,6 +130,9 @@ class TDCarousel {
         let settings = this.settings;
         if (settings.rewind === true && settings.loop === true) {
             console.warn('The "loop" parameter is a priority, so for "rewind" to work, you must set the "loop" parameter to "false"');
+        }
+        if (settings.center === true && settings.loop === false) {
+            console.warn('To work correctly in the "center" parameter, set the "loop" parameter to " true"');
         }
     }
 
@@ -222,7 +229,13 @@ class TDCarousel {
 
         carouselStage.style.width = Math.ceil(this._stage.childNodes.length * this._width) + 'px';
         carouselStage.style.transition = 'all 0s ease 0s';
-        carouselStage.style.transform = `translate3d(-${this._width * this._current}px, 0px , 0px)`;
+        if (this.settings.center === true) {
+            let tp = ((this.settings.items / 2) * this._width) - (this._width / 2) + (this._width * this._current) * -1;
+            this._stage.style.transform = `translate3d(${tp}px, 0px, 0px`;
+            this._stage.childNodes[this._current].classList.add('center');
+        } else {
+            carouselStage.style.transform = `translate3d(-${this._width * this._current}px, 0px , 0px)`;
+        }
 
         this.createNav();
         carousel.append(this.createDots());
@@ -230,7 +243,13 @@ class TDCarousel {
         this.selector.append(carousel);
         this._stage.addEventListener('transitionend', (e) => {
             carouselStage.style.transition = 'all 0s ease 0s';
-            this._stage.style.transform = `translate3d(-${this._width * this._current}px, 0px , 0px)`;
+            if (this.settings.center === true) {
+                let tp = ((this.settings.items / 2) * this._width) - (this._width / 2) + (this._width * this._current) * -1;
+                this._stage.style.transform = `translate3d(${tp}px, 0px, 0px`;
+                this._stage.childNodes[this._current].classList.add('center');
+            } else {
+                this._stage.style.transform = `translate3d(-${this._width * this._current}px, 0px , 0px)`;
+            }
         });
 
         if (this.settings.autoplay === true) {
@@ -427,6 +446,8 @@ class TDCarousel {
 
         if (this.settings.loop === true) {
             maximum = this._clones.length / 2 + this._items.length - 1;
+        } else if (this.settings.center === true) {
+            maximum = this._items.length - 1;
         } else {
             maximum = this._items.length - this.settings.items;
         }
@@ -487,8 +508,15 @@ class TDCarousel {
             position = pos;
         }
 
+        // this.current(position);
+        if (this.settings.center === true) {
+            let tp = ((this.settings.items / 2) * this._width) - (this._width / 2) + (this._width * pos) * -1;
+            this._stage.style.transform = `translate3d(${tp}px, 0px, 0px`;
+            this._stage.childNodes[this._current].classList.remove('center');
+        } else {
+            this._stage.style.transform = `translate3d(-${this._width * pos}px, 0px , 0px)`;
+        }
         this.current(position);
-        this._stage.style.transform = `translate3d(-${this._width * pos}px, 0px , 0px)`;
         this._stage.style.transition = `all ${this.duration(current, position, speed) / 1000}s ease 0s`;
         this.currentDots();
 
@@ -514,8 +542,16 @@ class TDCarousel {
             this.initItems();
         }
         let items = this._stage.childNodes;
-        for (var i = 0; i < items.length; i++) {
-            items[i].style.width = `${this._width}px`;
+        if (this.settings.center === true) {
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.width = `${this._width}px`;
+                items[i].classList.remove('center');
+            }
+            this._stage.childNodes[this._current].classList.add('center');
+        } else {
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.width = `${this._width}px`;
+            }
         }
     }
 
@@ -543,7 +579,6 @@ class TDCarousel {
             this.autoplayNext.bind(this),
             this._autoplayTimeout * (Math.round(this.read() / this._autoplayTimeout) + 1) - this.read()
         );
-        // this.next();
         this.to(this._current + 1, false, true);
     }
 
@@ -594,7 +629,12 @@ class TDCarousel {
 
         this.responsiveItems();
 
-        this._stage.style.transform = 'translate3d(-' + (this._width * this._current) + 'px, 0px , 0px)';
+        if (this.settings.center === true) {
+            let tp = ((this.settings.items / 2) * this._width) - (this._width / 2) + (this._width * this._current) * -1;
+            this._stage.style.transform = `translate3d(${tp}px, 0px, 0px`;
+        } else {
+            this._stage.style.transform = 'translate3d(-' + (this._width * this._current) + 'px, 0px , 0px)';
+        }
         this._stage.style.width = Math.ceil(this._stage.childNodes.length * this._width) + 'px';
 
         if (this._breakpoint !== -1 && this._breakpoint !== breakpoint) {
